@@ -87,6 +87,8 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 								)->html;
 								$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
 								$response = substr($html, strrpos($html, 'ALICE:')+8);
+								$response = str_replace("ALICE","Eve",$response);
+								$response = str_replace("  "," ",$response);
 							}
 							$fb->post('/'.$conversation_id.'/messages',array('message'=>$server_message.$response),$page_token)->getDecodedBody();
 							break 2;
