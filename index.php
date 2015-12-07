@@ -79,16 +79,21 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 								$server_message .= "[Server Message][Error] Only supports English words and punctuations.\n";
 							}
 							if (!$error) {
-								$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$conversation_id.'.txt')->html;
-								$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
-								preg_match('/<b>You said:<\/b>.+?<br\/><b>A.L.I.C.E.:<\/b> (.+?)<br\/>/', $html, $match);
-								$response = $match[1];
-								$response = str_replace("<br> ","\n",$response);
-								$response = str_replace("<p></p> ","\n\n",$response);
-								$response = strip_tags($response);
-								$response = str_replace("  "," ",$response);
-								$response = str_replace("ALICE","Eve",$response);
-								$response = str_replace("Artificial Linguistic Internet Computer Entity","Every day and night, I will be with you",$response);
+								$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$conversation_id.'.txt');
+								if($html == false){
+									$server_message .= "[Server Message][Error] AI server is down.\n";
+								} else {
+									$html = $html->html;
+									$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
+									preg_match('/<b>You said:<\/b>.+?<br\/><b>A.L.I.C.E.:<\/b> (.+?)<br\/>/', $html, $match);
+									$response = $match[1];
+									$response = str_replace("<br> ","\n",$response);
+									$response = str_replace("<p></p> ","\n\n",$response);
+									$response = strip_tags($response);
+									$response = str_replace("  "," ",$response);
+									$response = str_replace("ALICE","Eve",$response);
+									$response = str_replace("Artificial Linguistic Internet Computer Entity","Every day and night, I will be with you",$response);
+								}
 							}
 							$fb->post('/'.$conversation_id.'/messages',array('message'=>$server_message.$response),$page_token)->getDecodedBody();
 							break 2;
