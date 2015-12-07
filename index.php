@@ -101,6 +101,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 										$response = str_replace("California","Taiwan",$response);
 									}
 									$response = str_replace("Dr. Richard S. Wallace","K.R.T.GIRLS xiplus",$response);
+									$response = str_replace("Fake Captain Kirk","Leader of Pet, Jill",$response);
 									if(preg_match("/(\d\d : \d\d [AP]M)/", $response, $match)){
 										$old_time = $match[1];
 										$new_time = date("h : i A");
