@@ -97,6 +97,8 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 										$response = str_replace("Artificial Linguistic Internet Computer Entity","Every day and night, I will be with you",$response);
 									}
 									$response = str_replace("Oakland, California","Tainan, Taiwan",$response);
+									$response = str_replace("Oakland","Tainan",$response);
+									$response = str_replace("California","Taiwan",$response);
 									$response = str_replace("Dr. Richard S. Wallace","K.R.T.GIRLS xiplus",$response);
 									if(preg_match("/(\d\d : \d\d [AP]M)/", $response, $match)){
 										$old_time = $match[1];
