@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set("Asia/Taipei");
 require_once(__DIR__.'/config/config.php');
 require_once($config['sql_path']);
 require_once($config['curl_path']);
@@ -97,6 +98,11 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 									}
 									$response = str_replace("Oakland, California","Tainan, Taiwan",$response);
 									$response = str_replace("Dr. Richard S. Wallace","K.R.T.GIRLS xiplus",$response);
+									if(preg_match("/(\d\d : \d\d [AP]M)/", $response, $match)){
+										$old_time = $match[1];
+										$new_time = date("h : i A");
+										$response = str_replace($old_time, $new_time, $response);
+									}
 								}
 							}
 							$fb->post('/'.$conversation_id.'/messages',array('message'=>$server_message.$response),$page_token)->getDecodedBody();
