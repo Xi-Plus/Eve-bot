@@ -88,6 +88,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 								$response = strip_tags($response);
 								$response = str_replace("  "," ",$response);
 								$response = str_replace("ALICE","Eve",$response);
+								$response = str_replace("Artificial Linguistic Internet Computer Entity","Every day and night, I will be with you",$response);
 							}
 							$fb->post('/'.$conversation_id.'/messages',array('message'=>$server_message.$response),$page_token)->getDecodedBody();
 							break 2;
