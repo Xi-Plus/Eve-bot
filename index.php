@@ -79,17 +79,15 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 								$server_message .= "[Server Message][Error] Only supports English words and punctuations.\n";
 							}
 							if (!$error) {
-								$html = cURL_HTTP_Request(
-									'http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',
-									array('input'=>$input),
-									false,
-									'cookie/'.$conversation_id.'.txt'
-								)->html;
+								$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$conversation_id.'.txt')->html;
 								$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
-								$response = substr($html, strrpos($html, 'ALICE:')+8);
-								$response = str_replace("ALICE","Eve",$response);
+								preg_match('/<b>You said:<\/b>.+?<br\/><b>A.L.I.C.E.:<\/b> (.+?)<br\/>/', $html, $match);
+								$response = $match[1];
+								$response = str_replace("<br> ","\n",$response);
+								$response = str_replace("<p></p> ","\n\n",$response);
+								$response = strip_tags($response);
 								$response = str_replace("  "," ",$response);
-								$response = str_replace("<br>","\n",$response);
+								$response = str_replace("ALICE","Eve",$response);
 							}
 							$fb->post('/'.$conversation_id.'/messages',array('message'=>$server_message.$response),$page_token)->getDecodedBody();
 							break 2;
