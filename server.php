@@ -75,9 +75,13 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 								$server_message .= "[Server Message][Notice] Wrap will be ignored.\n";
 							}
 							$input = str_replace("\n", "", $input);
+							if (!preg_match("/[A-Za-z0-9]/", $input)) {
+								$error = true;
+								$server_message .= "[Server Message][Error] Your message must include any alphanumeric character.\n";
+							}
 							if (!preg_match("/^[\x20-\x7E]*$/", $input)) {
 								$error = true;
-								$server_message .= "[Server Message][Error] Only supports English words and punctuations.\n";
+								$server_message .= "[Server Message][Error] Only supports ASCII printable code (alphanumeric characters and some English punctuations).\n";
 							}
 							if (!$error) {
 								$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$conversation_id.'.txt');
