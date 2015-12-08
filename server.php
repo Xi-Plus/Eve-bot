@@ -109,8 +109,8 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 										$response = str_replace($old_time, $new_time, $response);
 									}
 									$response = str_replace("drwallace@alicebot.org","huangxuanyuxiplus@gmail.com",$response);
-									$response = str_replace("www.pandorabots.com","fb.com/1483388605304266",$response);
-									$response = str_replace("Www.AliceBot.Org","eve-bot.cf",$response);
+									$response = str_replace("www.pandorabots.com","http://eve-bot.cf",$response);
+									$response = str_replace("Www.AliceBot.Org","http://fb.com/1483388605304266",$response);
 								}
 							}
 							$fb->post('/'.$conversation_id.'/messages',array('message'=>$server_message.$response),$page_token)->getDecodedBody();
