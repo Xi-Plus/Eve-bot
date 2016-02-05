@@ -1,5 +1,3 @@
 config/config.php
 cookie/
-function/cURL-HTTP-function
-function/SQL-function
-function/facebook-php-sdk-v4
+
