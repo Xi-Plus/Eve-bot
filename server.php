@@ -1,7 +1,6 @@
 <?php
 date_default_timezone_set("Asia/Taipei");
 require_once(__DIR__.'/config/config.php');
-require_once(__DIR__.'/function/SQL-function/sql.php');
 require_once(__DIR__.'/function/cURL-HTTP-function/curl.php');
 require_once(__DIR__.'/function/facebook-php-sdk-v4/src/Facebook/autoload.php');
 
@@ -22,36 +21,23 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 			$conversation_id = $change['value']['thread_id'];
 			$field = $change['field'];
 			if ($field == 'conversations') {
-				$query = new query;
-				$query->dbname = $config['database_name'];
-				$query->table = 'conversations_botid';
-				$query->where = array('conversation_id',$conversation_id);
-				$temp = fetchone(SELECT($query));
-				if ($temp == null) {
+				if (!file_exists("data/".$conversation_id.".json")) {
 					$html = cURL_HTTP_Request('http://alice.pandorabots.com/',null,false,'cookie/'.$conversation_id.'.txt')->html;
 					$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
 					preg_match('/<iframe src="http:\/\/sheepridge\.pandorabots\.com\/pandora\/talk\?botid=(.+?)&skin=custom_input"/', $html, $match);
 					$botid = $match[1];
 					$created_time = date("c",0);
 				} else {
+					$temp = json_decode(file_get_contents("data/".$conversation_id.".json"), true);
 					$botid = $temp['botid'];
 					$created_time = $temp['created_time'];
 				}
 				$conversations = $fb->get('/'.$conversation_id.'/messages?fields=message,from,created_time',$config["page_token"])->getDecodedBody();
-				$query = new query;
-				$query->dbname = $config['database_name'];
-				$query->table = 'conversations_botid';
-				$query->where = array('conversation_id',$conversation_id);
-				DELETE($query);
-				$query = new query;
-				$query->dbname = $config['database_name'];
-				$query->table = 'conversations_botid';
-				$query->value = array(
-					array('conversation_id',$conversation_id),
-					array('botid',$botid),
-					array('created_time',$conversations['data'][0]['created_time'])
+				$temp = array(
+					'botid' => $botid,
+					'created_time' => $conversations['data'][0]['created_time']
 				);
-				INSERT($query);
+				file_put_contents("data/".$conversation_id.".json", json_encode($temp));
 				while (count($conversations['data']) > 0) {
 					foreach ($conversations['data'] as $message) {
 						if ($message['from']['id'] != $page_id && $message['created_time'] > $created_time) {
@@ -76,7 +62,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 								$server_message .= "[Server Message][Error] Only supports ASCII printable code (alphanumeric characters and some English punctuations).\n";
 							}
 							if (!$error) {
-								$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$conversation_id.'.txt');
+								$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$conversation_id.'.cookie');
 								if($html == false){
 									$server_message .= "[Server Message][Error] AI server is down. Please try again later.\n";
 								} else {
