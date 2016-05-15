@@ -8,16 +8,8 @@ require_once($config['facebook_sdk_path']);
 $fb = new Facebook\Facebook([
 	'app_id'=>$config['app_id'],
 	'app_secret'=>$config['app_secret'],
-	'default_access_token'=>$config['access_token'],
-	'default_graph_version'=>'v2.5',
+	'default_graph_version'=>'v2.6',
 ]);
-$response = $fb->get('/me/accounts')->getDecodedBody();
-foreach($response['data'] as $temp){
-	if($temp['id'] == $config['page_id']){
-		$page_token = $temp['access_token'];
-		break;
-	}
-}
 $method = $_SERVER['REQUEST_METHOD'];
 if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_token'] == $config['verify_token']) {
 	echo $_GET['hub_challenge'];
@@ -45,7 +37,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 					$botid = $temp['botid'];
 					$created_time = $temp['created_time'];
 				}
-				$conversations = $fb->get('/'.$conversation_id.'/messages?fields=message,from,created_time',$page_token)->getDecodedBody();
+				$conversations = $fb->get('/'.$conversation_id.'/messages?fields=message,from,created_time',$config["page_token"])->getDecodedBody();
 				$query = new query;
 				$query->dbname = $config['database_name'];
 				$query->table = 'conversations_botid';
@@ -86,7 +78,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 							if (!$error) {
 								$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$conversation_id.'.txt');
 								if($html == false){
-									$server_message .= "[Server Message][Error] AI server is down.\n";
+									$server_message .= "[Server Message][Error] AI server is down. Please try again later.\n";
 								} else {
 									$html = $html->html;
 									$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
@@ -120,7 +112,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 									$response = str_replace("Www.AliceBot.Org","http://fb.com/1483388605304266",$response);
 								}
 							}
-							$fb->post('/'.$conversation_id.'/messages',array('message'=>$server_message.$response),$page_token)->getDecodedBody();
+							$fb->post('/'.$conversation_id.'/messages',array('message'=>$server_message.$response),$config["page_token"])->getDecodedBody();
 							break 2;
 						}
 					}
