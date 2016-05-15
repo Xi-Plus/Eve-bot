@@ -1,9 +1,9 @@
 <?php
 date_default_timezone_set("Asia/Taipei");
 require_once(__DIR__.'/config/config.php');
-require_once($config['sql_path']);
-require_once($config['curl_path']);
-require_once($config['facebook_sdk_path']);
+require_once(__DIR__.'/function/SQL-function/sql.php');
+require_once(__DIR__.'/function/cURL-HTTP-function/curl.php');
+require_once(__DIR__.'/function/facebook-php-sdk-v4/src/Facebook/autoload.php');
 
 $fb = new Facebook\Facebook([
 	'app_id'=>$config['app_id'],
