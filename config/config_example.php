@@ -5,5 +5,5 @@ $config['database_name']='database_name';
 
 $config['app_id']='app_id';
 $config['app_secret']='app_secret';
-$config['page_token']='page_token';
+$config['access_token']='access_token';
 ?>
