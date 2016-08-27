@@ -2,26 +2,15 @@
 date_default_timezone_set("Asia/Taipei");
 require_once(__DIR__.'/config/config.php');
 require_once(__DIR__.'/function/cURL-HTTP-function/curl.php');
-require_once(__DIR__.'/function/facebook-php-sdk-v4/src/Facebook/autoload.php');
-
-$fb = new Facebook\Facebook([
-	'app_id'=>$config['app_id'],
-	'app_secret'=>$config['app_secret'],
-	'default_access_token' => $config['access_token'],
-	'default_graph_version'=>'v2.7',
-]);
-$response = $fb->get('/me/accounts')->getDecodedBody();
-foreach($response["data"] as $temp){
-	if($temp["id"]==$config['page_id']){
-		$page_token=$temp["access_token"];
-		break;
-	}
-}
+require_once(__DIR__.'/function/MStranslate.php');
 
 $method = $_SERVER['REQUEST_METHOD'];
-if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_token'] == $config['verify_token']) {
+if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_token'] == $cfg['verify_token']) {
 	echo $_GET['hub_challenge'];
 } else if ($method == 'POST') {
+	if ($cfg['MStranslate']['on']) {
+		$MStranslate = new MStranslate;
+	}
 	$inputJSON = file_get_contents('php://input');
 	$input = json_decode($inputJSON, true);
 	foreach ($input['entry'] as $entry) {
@@ -52,19 +41,26 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 				$error = true;
 				$server_message .= "[Server Message][Error] Only supports text.\n";
 			}
-			if (preg_match("/\n/", $input)) {
-				$server_message .= "[Server Message][Notice] Wrap will be ignored.\n";
-			}
 			$input = str_replace("\n", "", $input);
-			if (!preg_match("/[A-Za-z0-9]/", $input)) {
+			if (!$cfg['MStranslate']['on'] && !preg_match("/[A-Za-z0-9]/", $input)) {
 				$error = true;
 				$server_message .= "[Server Message][Error] Your message must include any alphanumeric character.\n";
 			}
-			if (!preg_match("/^[\x20-\x7E]*$/", $input)) {
+			if (!$cfg['MStranslate']['on'] && !preg_match("/^[\x20-\x7E]*$/", $input)) {
 				$error = true;
 				$server_message .= "[Server Message][Error] Only supports ASCII printable code (alphanumeric characters and some English punctuations).\n";
 			}
+			if ($cfg['MStranslate']['on']) {
+				$input_lang = $MStranslate->getlangcode($input);
+				if (!in_array($input_lang, array('en', 'zh-CHT', 'zh-CHS'))) {
+					$error = true;
+					$server_message .= "[Server Message][Error] Unsupported language.\n";
+				}
+			}
 			if (!$error) {
+				if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
+					$input = $MStranslate->translate($input_lang, "en", $input);
+				}
 				$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$user_id.'.cookie');
 				if($html == false){
 					$server_message .= "[Server Message][Error] AI server is down. Please try again later.\n";
@@ -99,6 +95,9 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 					$response = str_replace("drwallace@alicebot.org","huangxuanyuxiplus@gmail.com",$response);
 					$response = str_replace("www.pandorabots.com","http://eve-bot.cf",$response);
 					$response = str_replace("Www.AliceBot.Org","http://fb.com/1483388605304266",$response);
+				}
+				if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
+					$response = $MStranslate->translate("en", "zh-CHT", $response);
 				}
 			}
 			$messageData=array(
