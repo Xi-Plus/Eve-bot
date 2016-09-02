@@ -76,7 +76,6 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 					$response = str_replace("<p></p> ","\n\n",$response);
 					$response = strip_tags($response);
 					$response = str_replace("  "," ",$response);
-					$response = strtr($response, $transname);
 					if(strpos($response, "he is the author") === false && strpos($response, "He is a famous computer scientist") === false){
 						$response = str_replace("Artificial Linguistic Internet Computer Entity","Every day and night, I will be with you",$response);
 						$response = str_replace("Dr. Richard S. Wallace","K.R.T.GIRLS xiplus",$response);
@@ -96,8 +95,9 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 						$response = str_replace($old_time, $new_time, $response);
 					}
 					$response = str_replace("drwallace@alicebot.org","huangxuanyuxiplus@gmail.com",$response);
-					$response = str_replace("www.pandorabots.com","http://eve-bot.cf",$response);
+					$response = str_replace("www.pandorabots.com","http://xiplus.twbbs.org/eve/",$response);
 					$response = str_replace("Www.AliceBot.Org","http://fb.com/1483388605304266",$response);
+					$response = strtr($response, $transname);
 				}
 				if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
 					$response = $MStranslate->translate("en", "zh-CHT", $response);
