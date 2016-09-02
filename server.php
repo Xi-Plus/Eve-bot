@@ -58,12 +58,12 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 				}
 			}
 			if (!$error) {
-				$transname = array("ALICE" => "Eve", "Alice" => "Eve", "alice" => "Eve",
-					"EVE" => "ALICE", "Eve" => "Alice", "eve" => "alice");
-				$input = strtr($input, $transname);
 				if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
 					$input = $MStranslate->translate($input_lang, "en", $input);
 				}
+				$transname = array("ALICE" => "Eve", "Alice" => "Eve", "alice" => "Eve",
+					"EVE" => "ALICE", "Eve" => "Alice", "eve" => "alice");
+				$input = strtr($input, $transname);
 				$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$user_id.'.cookie');
 				if($html == false){
 					$server_message .= "[Server Message][Error] AI server is down. Please try again later.\n";
