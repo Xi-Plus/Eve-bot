@@ -16,7 +16,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 	foreach ($input['entry'] as $entry) {
 		foreach ($entry['messaging'] as $messaging) {
 			$page_id = $messaging['recipient']['id'];
-			if ($page_id != $config['page_id']) {
+			if ($page_id != $cfg['page_id']) {
 				continue;
 			}
 			$user_id = $messaging['sender']['id'];
