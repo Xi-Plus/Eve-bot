@@ -58,6 +58,9 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 				}
 			}
 			if (!$error) {
+				$transname = array("ALICE" => "Eve", "Alice" => "Eve", "alice" => "Eve",
+					"EVE" => "ALICE", "Eve" => "Alice", "eve" => "alice");
+				$input = strtr($input, $transname);
 				if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
 					$input = $MStranslate->translate($input_lang, "en", $input);
 				}
@@ -73,6 +76,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 					$response = str_replace("<p></p> ","\n\n",$response);
 					$response = strip_tags($response);
 					$response = str_replace("  "," ",$response);
+					$response = strtr($response, $transname);
 					if(strpos($response, "he is the author") === false && strpos($response, "He is a famous computer scientist") === false){
 						$response = str_replace("ALICE","Eve",$response);
 						$response = str_replace("Artificial Linguistic Internet Computer Entity","Every day and night, I will be with you",$response);
