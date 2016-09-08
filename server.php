@@ -52,14 +52,17 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 			}
 			if ($cfg['MStranslate']['on']) {
 				$input_lang = $MStranslate->getlangcode($input);
-				if (!in_array($input_lang, array('en', 'zh-CHT', 'zh-CHS'))) {
+			}
+			if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
+				if (strlen($input) > $cfg['MStranslate']['strlen_limit']) {
 					$error = true;
-					$server_message .= "[Server Message][Error] Unsupported language.\n";
+					$server_message .= "哎呀！由於技術原因，我沒辦法翻譯那麼多字，請不要把我當成翻譯器\n";
 				}
 			}
 			if (!$error) {
 				if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
 					$input = $MStranslate->translate($input_lang, "en", $input);
+					$server_message.="You said: ".$input." (".$input_lang.")\n";
 				}
 				$transname = array("ALICE" => "Eve", "Alice" => "Eve", "alice" => "Eve",
 					"EVE" => "ALICE", "Eve" => "Alice", "eve" => "alice");
@@ -100,6 +103,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 					$response = strtr($response, $transname);
 				}
 				if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
+					$server_message.="I said: ".$response."\n";
 					$response = $MStranslate->translate("en", "zh-CHT", $response);
 				}
 			}
@@ -107,7 +111,8 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 				"recipient"=>array("id"=>$user_id),
 				"message"=>array("text"=>$server_message.$response)
 			);
-			system('curl -X POST -H "Content-Type: application/json" -d \''.json_encode($messageData,JSON_HEX_APOS|JSON_HEX_QUOT).'\' "https://graph.facebook.com/v2.6/me/messages?access_token='.$page_token.'"');
+			$commend = 'curl -X POST -H "Content-Type: application/json" -d \''.json_encode($messageData,JSON_HEX_APOS|JSON_HEX_QUOT).'\' "https://graph.facebook.com/v2.6/me/messages?access_token='.$cfg['page_token'].'"';
+			system($commend);
 		}
 	}
 }
