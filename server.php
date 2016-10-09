@@ -104,7 +104,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 				}
 				if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
 					$server_message.="I said: ".$response."\n";
-					$response = $MStranslate->translate("en", "zh-CHT", $response);
+					$response = $MStranslate->translate("en", $input_lang, $response);
 				}
 			}
 			$messageData=array(
