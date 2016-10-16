@@ -107,12 +107,26 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 					$response = $MStranslate->translate("en", $input_lang, $response);
 				}
 			}
-			$messageData=array(
-				"recipient"=>array("id"=>$user_id),
-				"message"=>array("text"=>$server_message.$response)
-			);
-			$commend = 'curl -X POST -H "Content-Type: application/json" -d \''.json_encode($messageData,JSON_HEX_APOS|JSON_HEX_QUOT).'\' "https://graph.facebook.com/v2.6/me/messages?access_token='.$cfg['page_token'].'"';
-			system($commend);
+			if ($server_message != "") {
+				$messageData=array(
+					"recipient"=>array("id"=>$user_id),
+					"message"=>array("text"=>$server_message)
+				);
+				$command = 'curl -X POST -H "Content-Type: application/json" -d \''.json_encode($messageData,JSON_HEX_APOS|JSON_HEX_QUOT).'\' "https://graph.facebook.com/v2.6/me/messages?access_token='.$cfg['page_token'].'"';
+				system($command);
+			}
+			if ($response != "") {
+				$response = str_replace(array(". ", "? ", "! "), array(".\n", "?\n", "!\n"), $response);
+				$response = explode("\n", $response);
+				foreach ($response as $temp) {
+					$messageData=array(
+						"recipient"=>array("id"=>$user_id),
+						"message"=>array("text"=>$temp)
+					);
+					$command = 'curl -X POST -H "Content-Type: application/json" -d \''.json_encode($messageData,JSON_HEX_APOS|JSON_HEX_QUOT).'\' "https://graph.facebook.com/v2.6/me/messages?access_token='.$cfg['page_token'].'"';
+					system($command);
+				}
+			};
 		}
 	}
 }
