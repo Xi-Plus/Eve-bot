@@ -78,6 +78,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 					$response = str_replace("<br> ","\n",$response);
 					$response = str_replace("<p></p> ","\n\n",$response);
 					$response = strip_tags($response);
+					$response = htmlspecialchars_decode($response);
 					$response = str_replace("  "," ",$response);
 					if(strpos($response, "he is the author") === false && strpos($response, "He is a famous computer scientist") === false){
 						$response = str_replace("Artificial Linguistic Internet Computer Entity","Every day and night, I will be with you",$response);
