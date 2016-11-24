@@ -1,6 +1,3 @@
 [submodule "function/cURL-HTTP-function"]
 	path = function/cURL-HTTP-function
 	url = https://github.com/Xi-Plus/cURL-HTTP-function.git
-[submodule "function/facebook-php-sdk-v4"]
-	path = function/facebook-php-sdk-v4
-	url = https://github.com/facebook/facebook-php-sdk-v4.git
