@@ -7,7 +7,7 @@ $cfg['MStranslate']['on'] = false;
 $cfg['MStranslate']['client_id'] = 'client_id';
 $cfg['MStranslate']['client_secret'] = 'client_secret';
 $cfg['MStranslate']['strlen_limit'] = 150;
-$cfg['MStranslate']['strlen_limit_msg'] = '[Server Message][Error] Sorry! Your message too long to translate.';
+$cfg['MStranslate']['strlen_limit_msg'] = 'Sorry! Your message too long to translate.';
 
 $cfg['page_token'] = 'page_token';
 ?>
