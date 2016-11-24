@@ -56,7 +56,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 			if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
 				if (strlen($input) > $cfg['MStranslate']['strlen_limit']) {
 					$error = true;
-					$server_message .= "哎呀！由於技術原因，我沒辦法翻譯那麼多字，請不要把我當成翻譯器\n";
+					$server_message .= $cfg['MStranslate']['strlen_limit_msg'];
 				}
 			}
 			if (!$error) {
