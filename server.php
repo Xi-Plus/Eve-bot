@@ -31,7 +31,11 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 				$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
 				preg_match('/<iframe src="http:\/\/sheepridge\.pandorabots\.com\/pandora\/talk\?botid=(.+?)&skin=custom_input"/', $html, $match);
 				$botid = $match[1];
-				file_put_contents("data/".$user_id.".json", json_encode(array("botid"=>$botid)));
+				if ($botid === null) {
+					$server_message .= "[Server Message][Error] There were some errors when setting AI. Please try later.";
+				} else {
+					file_put_contents("data/".$user_id.".json", json_encode(array("botid"=>$botid)));
+				}
 			} else {
 				$temp = json_decode(file_get_contents("data/".$user_id.".json"), true);
 				$botid = $temp['botid'];
