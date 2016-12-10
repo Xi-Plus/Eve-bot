@@ -13,6 +13,16 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 	}
 	$inputJSON = file_get_contents('php://input');
 	$input = json_decode($inputJSON, true);
+	function SendMessage($message) {
+		global $cfg;
+		global $user_id;
+		$messageData=array(
+			"recipient"=>array("id"=>$user_id),
+			"message"=>array("text"=>$message)
+		);
+		$command = 'curl -X POST -H "Content-Type: application/json" -d \''.json_encode($messageData,JSON_HEX_APOS|JSON_HEX_QUOT).'\' "https://graph.facebook.com/v2.6/me/messages?access_token='.$cfg['page_token'].'"';
+		system($command);
+	}
 	foreach ($input['entry'] as $entry) {
 		foreach ($entry['messaging'] as $messaging) {
 			$page_id = $messaging['recipient']['id'];
@@ -32,7 +42,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 				preg_match('/<iframe src="http:\/\/sheepridge\.pandorabots\.com\/pandora\/talk\?botid=(.+?)&skin=custom_input"/', $html, $match);
 				$botid = $match[1];
 				if ($botid === null) {
-					$server_message .= "[Server Message][Error] There were some errors when setting AI. Please try later.";
+					SendMessage("[Server Message][Error] There were some errors when setting AI. Please try later.");
 				} else {
 					file_put_contents("data/".$user_id.".json", json_encode(array("botid"=>$botid)));
 				}
@@ -43,16 +53,16 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 			$error = false;
 			if ($input == "") {
 				$error = true;
-				$server_message .= "[Server Message][Error] Only supports text.\n";
+				SendMessage("[Server Message][Error] Only supports text.");
 			}
 			$input = str_replace("\n", "", $input);
 			if (!$cfg['MStranslate']['on'] && !preg_match("/[A-Za-z0-9]/", $input)) {
 				$error = true;
-				$server_message .= "[Server Message][Error] Your message must include any alphanumeric character.\n";
+				SendMessage("[Server Message][Error] Your message must include any alphanumeric character.");
 			}
 			if (!$cfg['MStranslate']['on'] && !preg_match("/^[\x20-\x7E]*$/", $input)) {
 				$error = true;
-				$server_message .= "[Server Message][Error] Only supports ASCII printable code (alphanumeric characters and some English punctuations).\n";
+				SendMessage("[Server Message][Error] Only supports ASCII printable code (alphanumeric characters and some English punctuations).");
 			}
 			if ($cfg['MStranslate']['on']) {
 				$input_lang = $MStranslate->getlangcode($input);
@@ -60,20 +70,20 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 			if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
 				if (strlen($input) > $cfg['MStranslate']['strlen_limit']) {
 					$error = true;
-					$server_message .= $cfg['MStranslate']['strlen_limit_msg']."\n".$MStranslate->translate("en", $input_lang, $cfg['MStranslate']['strlen_limit_msg'])." (".$input_lang.")";
+					SendMessage($cfg['MStranslate']['strlen_limit_msg']."\n".$MStranslate->translate("en", $input_lang, $cfg['MStranslate']['strlen_limit_msg'])." (".$input_lang.")");
 				}
 			}
 			if (!$error) {
 				if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
 					$input = $MStranslate->translate($input_lang, "en", $input);
-					$server_message.="You said: ".$input." (".$input_lang.")\n";
+					SendMessage("You said: ".$input." (".$input_lang.")");
 				}
 				$transname = array("ALICE" => "Eve", "Alice" => "Eve", "alice" => "Eve",
 					"EVE" => "ALICE", "Eve" => "Alice", "eve" => "alice");
 				$input = strtr($input, $transname);
 				$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$user_id.'.cookie');
 				if($html == false){
-					$server_message .= "[Server Message][Error] AI server is down. Please try again later.\n";
+					SendMessage("[Server Message][Error] AI server is down. Please try again later.");
 				} else {
 					$html = $html->html;
 					$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
@@ -107,31 +117,16 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 					$response = str_replace("Www.AliceBot.Org","http://fb.com/1483388605304266",$response);
 					$response = strtr($response, $transname);
 				}
-				if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
-					$server_message.="I said: ".$response."\n";
-					$response = $MStranslate->translate("en", $input_lang, $response);
-				}
-			}
-			if ($server_message != "") {
-				$messageData=array(
-					"recipient"=>array("id"=>$user_id),
-					"message"=>array("text"=>$server_message)
-				);
-				$command = 'curl -X POST -H "Content-Type: application/json" -d \''.json_encode($messageData,JSON_HEX_APOS|JSON_HEX_QUOT).'\' "https://graph.facebook.com/v2.6/me/messages?access_token='.$cfg['page_token'].'"';
-				system($command);
-			}
-			if ($response != "") {
 				$response = str_replace(array(". ", "? ", "! "), array(".\n", "?\n", "!\n"), $response);
-				$response = explode("\n", $response);
-				foreach ($response as $temp) {
-					$messageData=array(
-						"recipient"=>array("id"=>$user_id),
-						"message"=>array("text"=>$temp)
-					);
-					$command = 'curl -X POST -H "Content-Type: application/json" -d \''.json_encode($messageData,JSON_HEX_APOS|JSON_HEX_QUOT).'\' "https://graph.facebook.com/v2.6/me/messages?access_token='.$cfg['page_token'].'"';
-					system($command);
+				$responses = explode("\n", $response);
+				foreach ($responses as $response) {
+					if (trim($response) == "") continue;
+					if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
+						$response .= "\n".$MStranslate->translate("en", $input_lang, $response);
+					}
+					SendMessage($response);
 				}
-			};
+			}
 		}
 	}
 }
