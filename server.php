@@ -82,7 +82,6 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 					"EVE" => "ALICE", "Eve" => "Alice", "eve" => "alice");
 				$input = strtr($input, $transname);
 				$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$user_id.'.cookie');
-		file_put_contents("log/".date("Y-m-d-H-i-s")."-html.log", $html->header["http_code"]);
 				if ($html === false) {
 					SendMessage("[Server Message][Error] AI server is down. Please try again later.");
 				} else if ($html->header["http_code"] == 502){
