@@ -82,7 +82,10 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 					"EVE" => "ALICE", "Eve" => "Alice", "eve" => "alice");
 				$input = strtr($input, $transname);
 				$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$user_id.'.cookie');
-				if($html == false){
+		file_put_contents("log/".date("Y-m-d-H-i-s")."-html.log", $html->header["http_code"]);
+				if ($html === false) {
+					SendMessage("[Server Message][Error] AI server is down. Please try again later.");
+				} else if ($html->header["http_code"] == 502){
 					SendMessage("[Server Message][Error] AI server is down. Please try again later.");
 				} else {
 					$html = $html->html;
@@ -116,15 +119,15 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 					$response = str_replace("www.pandorabots.com","http://xiplus.twbbs.org/eve/",$response);
 					$response = str_replace("Www.AliceBot.Org","http://fb.com/1483388605304266",$response);
 					$response = strtr($response, $transname);
-				}
-				$response = str_replace(array(". ", "? ", "! "), array(".\n", "?\n", "!\n"), $response);
-				$responses = explode("\n", $response);
-				foreach ($responses as $response) {
-					if (trim($response) == "") continue;
-					if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
-						$response .= "\n".$MStranslate->translate("en", $input_lang, $response);
+					$response = str_replace(array(". ", "? ", "! "), array(".\n", "?\n", "!\n"), $response);
+					$responses = explode("\n", $response);
+					foreach ($responses as $response) {
+						if (trim($response) == "") continue;
+						if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
+							$response .= "\n".$MStranslate->translate("en", $input_lang, $response);
+						}
+						SendMessage($response);
 					}
-					SendMessage($response);
 				}
 			}
 		}
