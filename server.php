@@ -15,12 +15,11 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 	$input = json_decode($inputJSON, true);
 	function SendMessage($uid, $message) {
 		global $cfg;
-		$messageData=array(
+		$post = array(
 			"recipient"=>array("id"=>$uid),
 			"message"=>array("text"=>$message)
 		);
-		$command = 'curl -X POST -H "Content-Type: application/json" -d \''.json_encode($messageData,JSON_HEX_APOS|JSON_HEX_QUOT).'\' "https://graph.facebook.com/v2.6/me/messages?access_token='.$cfg['page_token'].'"';
-		system($command);
+		cURL_HTTP_Request("https://graph.facebook.com/v2.6/me/messages?access_token=".$cfg['page_token'],$post);
 	}
 	foreach ($input['entry'] as $entry) {
 		foreach ($entry['messaging'] as $messaging) {
