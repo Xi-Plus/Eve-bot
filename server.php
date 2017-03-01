@@ -35,7 +35,6 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 			}
 			$input = $messaging['message']['text'];
 			$input = str_replace("\n", "", $input);
-			SendMessage($uid, "Your messages is : ".$input);
 			if (!file_exists("data/".$user_id.".json")) {
 				$html = cURL_HTTP_Request('http://alice.pandorabots.com/',null,false,'cookie/'.$user_id.'.cookie')->html;
 				$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
