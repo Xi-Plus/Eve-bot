@@ -4,27 +4,26 @@ require_once(__DIR__.'/config/config.php');
 require_once(__DIR__.'/function/cURL-HTTP-function/curl.php');
 require_once(__DIR__.'/function/MStranslate.php');
 
-$method = $_SERVER['REQUEST_METHOD'];
-if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_token'] == $cfg['verify_token']) {
-	echo $_GET['hub_challenge'];
-} else if ($method == 'POST') {
-	if ($cfg['MStranslate']['on']) {
-		$MStranslate = new MStranslate;
-	}
-	$inputJSON = file_get_contents('php://input');
-	$input = json_decode($inputJSON, true);
-	function SendMessage($uid, $message) {
-		global $cfg;
-		$post = array(
-			"recipient"=>array("id"=>$uid),
-			"message"=>array("text"=>$message)
-		);
-		cURL_HTTP_Request("https://graph.facebook.com/v2.6/me/messages?access_token=".$cfg['page_token'],$post);
-	}
+if ($C['MStranslate']['on']) {
+	$MStranslate = new MStranslate;
+}
+function SendMessage($uid, $message) {
+	global $C;
+	$post = array(
+		"recipient"=>array("id"=>$uid),
+		"message"=>array("text"=>$message)
+	);
+	cURL_HTTP_Request("https://graph.facebook.com/v2.6/me/messages?access_token=".$C['page_token'],$post);
+}
+$sth = $G["db"]->prepare("SELECT * FROM `{$C['DBTBprefix']}input` ORDER BY `time` ASC");
+$res = $sth->execute();
+$row = $sth->fetchAll(PDO::FETCH_ASSOC);
+foreach ($row as $data) {
+	$input = json_decode($data["input"], true);
 	foreach ($input['entry'] as $entry) {
 		foreach ($entry['messaging'] as $messaging) {
 			$page_id = $messaging['recipient']['id'];
-			if ($page_id != $cfg['page_id']) {
+			if ($page_id != $C['page_id']) {
 				continue;
 			}
 			$uid = $messaging['sender']['id'];
@@ -49,24 +48,24 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 				$temp = json_decode(file_get_contents("data/".$user_id.".json"), true);
 				$botid = $temp['botid'];
 			}
-			if (!$cfg['MStranslate']['on'] && !preg_match("/[A-Za-z0-9]/", $input)) {
+			if (!$C['MStranslate']['on'] && !preg_match("/[A-Za-z0-9]/", $input)) {
 				SendMessage($uid, "[Server Message][Error] Your message must include any alphanumeric character.");
 				continue;
 			}
-			if (!$cfg['MStranslate']['on'] && !preg_match("/^[\x20-\x7E]*$/", $input)) {
+			if (!$C['MStranslate']['on'] && !preg_match("/^[\x20-\x7E]*$/", $input)) {
 				SendMessage($uid, "[Server Message][Error] Only supports ASCII printable code (alphanumeric characters and some English punctuations).");
 				continue;
 			}
-			if ($cfg['MStranslate']['on']) {
+			if ($C['MStranslate']['on']) {
 				$input_lang = $MStranslate->getlangcode($input);
 			}
-			if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
-				if (strlen($input) > $cfg['MStranslate']['strlen_limit']) {
-					SendMessage($uid, $cfg['MStranslate']['strlen_limit_msg']."\n".$MStranslate->translate("en", $input_lang, $cfg['MStranslate']['strlen_limit_msg'])." (".$input_lang.")");
+			if ($C['MStranslate']['on'] && $input_lang != 'en') {
+				if (strlen($input) > $C['MStranslate']['strlen_limit']) {
+					SendMessage($uid, $C['MStranslate']['strlen_limit_msg']."\n".$MStranslate->translate("en", $input_lang, $C['MStranslate']['strlen_limit_msg'])." (".$input_lang.")");
 					continue;
 				}
 			}
-			if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
+			if ($C['MStranslate']['on'] && $input_lang != 'en') {
 				$input = $MStranslate->translate($input_lang, "en", $input);
 				SendMessage($uid, "You said: ".$input." (".$input_lang.")");
 			}
@@ -117,11 +116,14 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 			$responses = explode("\n", $response);
 			foreach ($responses as $response) {
 				if (trim($response) == "") continue;
-				if ($cfg['MStranslate']['on'] && $input_lang != 'en') {
+				if ($C['MStranslate']['on'] && $input_lang != 'en') {
 					$response .= "\n".$MStranslate->translate("en", $input_lang, $response);
 				}
 				SendMessage($uid, $response);
 			}
 		}
 	}
+	$sth = $G["db"]->prepare("DELETE FROM `{$C['DBTBprefix']}input` WHERE `hash` = :hash");
+	$sth->bindValue(":hash", $data["hash"]);
+	$res = $sth->execute();
 }

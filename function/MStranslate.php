@@ -7,8 +7,8 @@ class MStranslate {
 		$param = array (
 			'grant_type'    => 'client_credentials',
 			'scope'         => 'http://api.microsofttranslator.com',
-			'client_id'     => $cfg['MStranslate']['client_id'],
-			'client_secret' => $cfg['MStranslate']['client_secret']
+			'client_id'     => $C['MStranslate']['client_id'],
+			'client_secret' => $C['MStranslate']['client_secret']
 		);
 		$res = cURL_HTTP_Request('https://datamarket.accesscontrol.windows.net/v2/OAuth2-13',$param)->html;
 		$this->access_token = json_decode($res)->access_token;
