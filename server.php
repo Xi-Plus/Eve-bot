@@ -1,8 +1,9 @@
 <?php
 date_default_timezone_set("Asia/Taipei");
-require_once(__DIR__.'/config/config.php');
-require_once(__DIR__.'/function/cURL-HTTP-function/curl.php');
-require_once(__DIR__.'/function/MStranslate.php');
+require(__DIR__.'/config/config.php');
+require(__DIR__.'/function/cURL-HTTP-function/curl.php');
+require(__DIR__.'/function/MStranslate.php');
+require(__DIR__.'/log.php');
 
 if ($C['MStranslate']['on']) {
 	$MStranslate = new MStranslate;
@@ -15,15 +16,17 @@ function SendMessage($uid, $message) {
 	);
 	cURL_HTTP_Request("https://graph.facebook.com/v2.6/me/messages?access_token=".$C['page_token'],$post);
 }
-$sth = $G["db"]->prepare("SELECT * FROM `{$C['DBTBprefix']}input` ORDER BY `time` ASC");
-$res = $sth->execute();
-$row = $sth->fetchAll(PDO::FETCH_ASSOC);
-foreach ($row as $data) {
+while (true) {
+	$sth = $G["db"]->prepare("SELECT * FROM `{$C['DBTBprefix']}input` ORDER BY `time` ASC LIMIT 1");
+	$res = $sth->execute();
+	$data = $sth->fetch(PDO::FETCH_ASSOC);
+	if (count($data) == 0) {
+		break;
+	}
 	$sth = $G["db"]->prepare("DELETE FROM `{$C['DBTBprefix']}input` WHERE `hash` = :hash");
 	$sth->bindValue(":hash", $data["hash"]);
 	$res = $sth->execute();
-}
-foreach ($row as $data) {
+	WriteLog("delete queue: hash=".$data["hash"]);
 	$input = json_decode($data["input"], true);
 	foreach ($input['entry'] as $entry) {
 		foreach ($entry['messaging'] as $messaging) {

@@ -1,6 +1,8 @@
 <?php
+$start = microtime(true);
 date_default_timezone_set("Asia/Taipei");
 require(__DIR__.'/config/config.php');
+require(__DIR__.'/log.php');
 
 $method = $_SERVER['REQUEST_METHOD'];
 if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_token'] == $C['verify_token']) {
@@ -14,5 +16,7 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 	$sth->bindValue(":input", $inputJSON);
 	$sth->bindValue(":hash", $hash);
 	$res = $sth->execute();
+	WriteLog("insert queue: hash=".$hash);
 	pclose(popen("php server.php", "r"));
 }
+WriteLog("webhook takes ".(microtime(true)-$start)." seconds");
