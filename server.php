@@ -20,7 +20,7 @@ while (true) {
 	$sth = $G["db"]->prepare("SELECT * FROM `{$C['DBTBprefix']}input` ORDER BY `time` ASC LIMIT 1");
 	$res = $sth->execute();
 	$data = $sth->fetch(PDO::FETCH_ASSOC);
-	if (count($data) == 0) {
+	if ($data === false) {
 		break;
 	}
 	$sth = $G["db"]->prepare("DELETE FROM `{$C['DBTBprefix']}input` WHERE `hash` = :hash");
