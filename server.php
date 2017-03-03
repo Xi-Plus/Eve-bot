@@ -19,6 +19,11 @@ $sth = $G["db"]->prepare("SELECT * FROM `{$C['DBTBprefix']}input` ORDER BY `time
 $res = $sth->execute();
 $row = $sth->fetchAll(PDO::FETCH_ASSOC);
 foreach ($row as $data) {
+	$sth = $G["db"]->prepare("DELETE FROM `{$C['DBTBprefix']}input` WHERE `hash` = :hash");
+	$sth->bindValue(":hash", $data["hash"]);
+	$res = $sth->execute();
+}
+foreach ($row as $data) {
 	$input = json_decode($data["input"], true);
 	foreach ($input['entry'] as $entry) {
 		foreach ($entry['messaging'] as $messaging) {
@@ -123,7 +128,4 @@ foreach ($row as $data) {
 			}
 		}
 	}
-	$sth = $G["db"]->prepare("DELETE FROM `{$C['DBTBprefix']}input` WHERE `hash` = :hash");
-	$sth->bindValue(":hash", $data["hash"]);
-	$res = $sth->execute();
 }
