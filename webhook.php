@@ -17,6 +17,6 @@ if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_t
 	$sth->bindValue(":hash", $hash);
 	$res = $sth->execute();
 	WriteLog("insert queue: hash=".$hash);
-	pclose(popen("php server.php", "r"));
+	exec("php server.php > /dev/null 2>&1 &");
 }
 WriteLog("webhook takes ".(microtime(true)-$start)." seconds");
