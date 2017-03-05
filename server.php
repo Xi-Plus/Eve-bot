@@ -14,7 +14,12 @@ function SendMessage($uid, $message) {
 		"recipient"=>array("id"=>$uid),
 		"message"=>array("text"=>$message)
 	);
-	cURL_HTTP_Request("https://graph.facebook.com/v2.6/me/messages?access_token=".$C['page_token'],$post);
+	$res = cURL_HTTP_Request("https://graph.facebook.com/v2.6/me/messages?access_token=".$C['page_token'], $post);
+	$res = json_decode($res, true);
+	if (isset($res["error"])) {
+		WriteLog("[smsg][error] res=".json_encode($res)." uid=".$uid." msg=".$message);
+		return false;
+	}
 }
 while (true) {
 	$sth = $G["db"]->prepare("SELECT * FROM `{$C['DBTBprefix']}input` ORDER BY `time` ASC LIMIT 1");
@@ -26,7 +31,6 @@ while (true) {
 	$sth = $G["db"]->prepare("DELETE FROM `{$C['DBTBprefix']}input` WHERE `hash` = :hash");
 	$sth->bindValue(":hash", $data["hash"]);
 	$res = $sth->execute();
-	WriteLog("delete queue: hash=".$data["hash"]);
 	$input = json_decode($data["input"], true);
 	foreach ($input['entry'] as $entry) {
 		foreach ($entry['messaging'] as $messaging) {
@@ -83,10 +87,12 @@ while (true) {
 			$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$user_id.'.cookie');
 			if ($html === false) {
 				SendMessage($uid, "[Server Message][Error] AI server is down. Please try again later.");
+				WriteLog("[ser][error] fetch page 1");
 				continue;
 			}
 			if ($html->header["http_code"] == 502){
 				SendMessage($uid, "[Server Message][Error] AI server is down. Please try again later.");
+				WriteLog("[ser][error] fetch page http 502");
 				continue;
 			}
 			$html = $html->html;
