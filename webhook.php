@@ -2,7 +2,7 @@
 $start = microtime(true);
 date_default_timezone_set("Asia/Taipei");
 require(__DIR__.'/config/config.php');
-require(__DIR__.'/log.php');
+require(__DIR__.'/function/log.php');
 
 $method = $_SERVER['REQUEST_METHOD'];
 if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&  $_GET['hub_verify_token'] == $C['verify_token']) {

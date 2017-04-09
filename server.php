@@ -1,9 +1,13 @@
 <?php
-date_default_timezone_set("Asia/Taipei");
 require(__DIR__.'/config/config.php');
+if (!in_array(PHP_SAPI, $C["allowsapi"])) {
+	exit("No permission");
+}
+
+date_default_timezone_set("Asia/Taipei");
 require(__DIR__.'/function/cURL-HTTP-function/curl.php');
 require(__DIR__.'/function/MStranslate.php');
-require(__DIR__.'/log.php');
+require(__DIR__.'/function/log.php');
 
 if ($C['MStranslate']['on']) {
 	$MStranslate = new MStranslate;
