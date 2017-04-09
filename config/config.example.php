@@ -9,6 +9,8 @@ $C['MStranslate']['client_secret'] = 'client_secret';
 $C['MStranslate']['strlen_limit'] = 150;
 $C['MStranslate']['strlen_limit_msg'] = 'Sorry! Your message too long to translate.';
 
+$C["allowsapi"] = array("cli");
+
 $C["DBhost"] = 'localhost';
 $C['DBname'] = 'xiplus_fbpage';
 $C['DBuser'] = 'xiplus';
