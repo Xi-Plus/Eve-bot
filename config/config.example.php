@@ -9,6 +9,8 @@ $C['MStranslate']['client_secret'] = 'client_secret';
 $C['MStranslate']['strlen_limit'] = 150;
 $C['MStranslate']['strlen_limit_msg'] = 'Sorry! Your message too long to translate.';
 
+$C['LogKeep'] = 86400*7;
+
 $C["allowsapi"] = array("cli");
 
 $C["DBhost"] = 'localhost';
