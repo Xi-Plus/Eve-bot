@@ -67,6 +67,20 @@ while (true) {
 				$sth->bindValue(":botid", $botid);
 				$sth->bindValue(":botcust2", $botcust2);
 				$sth->execute();
+
+				$res = cURL_HTTP_Request("https://graph.facebook.com/v2.6/{$sid}?access_token={$C['page_token']}")->html;
+				WriteLog("[ser][info] newuser sid=".$sid." res=".$res);
+				$res = json_decode($res, true);
+				$username = $res["first_name"];
+
+				$res = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input', array('input'=>"My name is ".$username, 'botcust2'=>$botcust2), false, 'cookie/'.$sid.'.cookie');
+				if ($res === false) {
+					WriteLog("[ser][error] set name fail sid=".$sid);
+					$username = "Judge";
+				}
+				SendMessage($sid, "Nice to meet you.\n".
+					"I will call you {$username}.\n".
+					"You can type \"My name is ...\" to set your nickname.");
 			} else {
 				$botid = $row["botid"];
 				$botcust2 = $row["botcust2"];
