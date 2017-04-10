@@ -19,12 +19,21 @@ CREATE TABLE `eve_log` (
   `hash` varchar(32) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `eve_user` (
+  `sid` varchar(255) NOT NULL,
+  `botid` varchar(255) NOT NULL,
+  `botcust2` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 ALTER TABLE `eve_input`
   ADD UNIQUE KEY `hash` (`hash`);
 
 ALTER TABLE `eve_log`
   ADD UNIQUE KEY `hash` (`hash`);
+
+ALTER TABLE `eve_user`
+  ADD UNIQUE KEY `uid` (`sid`);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
