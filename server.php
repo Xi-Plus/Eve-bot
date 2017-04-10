@@ -12,16 +12,16 @@ require(__DIR__.'/function/log.php');
 if ($C['MStranslate']['on']) {
 	$MStranslate = new MStranslate;
 }
-function SendMessage($uid, $message) {
+function SendMessage($sid, $message) {
 	global $C;
 	$post = array(
-		"recipient"=>array("id"=>$uid),
+		"recipient"=>array("id"=>$sid),
 		"message"=>array("text"=>$message)
 	);
 	$res = cURL_HTTP_Request("https://graph.facebook.com/v2.6/me/messages?access_token=".$C['page_token'], $post);
 	$res = json_decode($res, true);
 	if (isset($res["error"])) {
-		WriteLog("[smsg][error] res=".json_encode($res)." uid=".$uid." msg=".$message);
+		WriteLog("[smsg][error] res=".json_encode($res)." sid=".$sid." msg=".$message);
 		return false;
 	}
 }
@@ -38,38 +38,51 @@ while (true) {
 	$input = json_decode($data["input"], true);
 	foreach ($input['entry'] as $entry) {
 		foreach ($entry['messaging'] as $messaging) {
-			$page_id = $messaging['recipient']['id'];
-			if ($page_id != $C['page_id']) {
-				continue;
-			}
-			$uid = $messaging['sender']['id'];
-			if (!isset($messaging['message']['text'])) {
-				SendMessage($uid, "[Server Message][Error] Only supports text.");
-				continue;
-			}
-			$input = $messaging['message']['text'];
-			$input = str_replace("\n", "", $input);
-			if (!file_exists("data/".$user_id.".json")) {
-				$html = cURL_HTTP_Request('http://alice.pandorabots.com/',null,false,'cookie/'.$user_id.'.cookie')->html;
+			$sid = $messaging['sender']['id'];
+			$sth = $G["db"]->prepare("SELECT * FROM `{$C['DBTBprefix']}user` WHERE `sid` = :sid");
+			$sth->bindValue(":sid", $sid);
+			$sth->execute();
+			$row = $sth->fetch(PDO::FETCH_ASSOC);
+			if ($row === false) {
+				$html = cURL_HTTP_Request('http://alice.pandorabots.com/', null, false, 'cookie/'.$sid.'.cookie')->html;
 				$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
 				preg_match('/<iframe src="http:\/\/sheepridge\.pandorabots\.com\/pandora\/talk\?botid=(.+?)&skin=custom_input"/', $html, $match);
 				$botid = $match[1];
 				if ($botid === null) {
-					SendMessage($uid, "[Server Message][Error] There were some errors when setting AI. Please try later.");
+					SendMessage($sid, "[Server Message][Error] There were some errors when setting AI. Please try later.");
+					WriteLog("[ser][error] setup 1");
 					continue;
-				} else {
-					file_put_contents("data/".$user_id.".json", json_encode(array("botid"=>$botid)));
 				}
+				$html = cURL_HTTP_Request("http://sheepridge.pandorabots.com/pandora/talk?botid={$botid}&skin=custom_input", null, false, 'cookie/'.$sid.'.cookie')->html;
+				$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
+				preg_match('/name="botcust2" value="(.+?)"/', $html, $match);
+				$botcust2 = $match[1];
+				if ($botcust2 === null) {
+					SendMessage($sid, "[Server Message][Error] There were some errors when setting AI. Please try later.");
+					WriteLog("[ser][error] setup 2");
+					continue;
+				}
+				$sth = $G["db"]->prepare("INSERT INTO `{$C['DBTBprefix']}user` (`sid`, `botid`, `botcust2`) VALUES (:sid, :botid, :botcust2)");
+				$sth->bindValue(":sid", $sid);
+				$sth->bindValue(":botid", $botid);
+				$sth->bindValue(":botcust2", $botcust2);
+				$sth->execute();
 			} else {
-				$temp = json_decode(file_get_contents("data/".$user_id.".json"), true);
-				$botid = $temp['botid'];
+				$botid = $row["botid"];
+				$botcust2 = $row["botcust2"];
 			}
+			if (!isset($messaging['message']['text'])) {
+				SendMessage($sid, "[Server Message][Error] Only supports text.");
+				continue;
+			}
+			$input = $messaging['message']['text'];
+			$input = str_replace("\n", "", $input);
 			if (!$C['MStranslate']['on'] && !preg_match("/[A-Za-z0-9]/", $input)) {
-				SendMessage($uid, "[Server Message][Error] Your message must include any alphanumeric character.");
+				SendMessage($sid, "[Server Message][Error] Your message must include any alphanumeric character.");
 				continue;
 			}
 			if (!$C['MStranslate']['on'] && !preg_match("/^[\x20-\x7E]*$/", $input)) {
-				SendMessage($uid, "[Server Message][Error] Only supports ASCII printable code (alphanumeric characters and some English punctuations).");
+				SendMessage($sid, "[Server Message][Error] Only supports ASCII printable code (alphanumeric characters and some English punctuations).");
 				continue;
 			}
 			if ($C['MStranslate']['on']) {
@@ -77,25 +90,25 @@ while (true) {
 			}
 			if ($C['MStranslate']['on'] && $input_lang != 'en') {
 				if (strlen($input) > $C['MStranslate']['strlen_limit']) {
-					SendMessage($uid, $C['MStranslate']['strlen_limit_msg']."\n".$MStranslate->translate("en", $input_lang, $C['MStranslate']['strlen_limit_msg'])." (".$input_lang.")");
+					SendMessage($sid, $C['MStranslate']['strlen_limit_msg']."\n".$MStranslate->translate("en", $input_lang, $C['MStranslate']['strlen_limit_msg'])." (".$input_lang.")");
 					continue;
 				}
 			}
 			if ($C['MStranslate']['on'] && $input_lang != 'en') {
 				$input = $MStranslate->translate($input_lang, "en", $input);
-				SendMessage($uid, "You said: ".$input." (".$input_lang.")");
+				SendMessage($sid, "You said: ".$input." (".$input_lang.")");
 			}
 			$transname = array("ALICE" => "Eve", "Alice" => "Eve", "alice" => "Eve",
 				"EVE" => "ALICE", "Eve" => "Alice", "eve" => "alice");
 			$input = strtr($input, $transname);
-			$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input),false,'cookie/'.$user_id.'.cookie');
+			$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input, 'botcust2'=>$botcust2),false,'cookie/'.$sid.'.cookie');
 			if ($html === false) {
-				SendMessage($uid, "[Server Message][Error] AI server is down. Please try again later.");
+				SendMessage($sid, "[Server Message][Error] AI server is down. Please try again later.");
 				WriteLog("[ser][error] fetch page 1");
 				continue;
 			}
 			if ($html->header["http_code"] == 502){
-				SendMessage($uid, "[Server Message][Error] AI server is down. Please try again later.");
+				SendMessage($sid, "[Server Message][Error] AI server is down. Please try again later.");
 				WriteLog("[ser][error] fetch page http 502");
 				continue;
 			}
@@ -137,7 +150,7 @@ while (true) {
 				if ($C['MStranslate']['on'] && $input_lang != 'en') {
 					$response .= "\n".$MStranslate->translate("en", $input_lang, $response);
 				}
-				SendMessage($uid, $response);
+				SendMessage($sid, $response);
 			}
 		}
 	}
