@@ -44,7 +44,7 @@ while (true) {
 			$sth->execute();
 			$row = $sth->fetch(PDO::FETCH_ASSOC);
 			if ($row === false) {
-				$html = cURL_HTTP_Request('http://alice.pandorabots.com/', null, false, 'cookie/'.$sid.'.cookie')->html;
+				$html = cURL_HTTP_Request('http://alice.pandorabots.com/', null, false, __DIR__.'/cookie/'.$sid.'.cookie')->html;
 				$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
 				preg_match('/<iframe src="http:\/\/sheepridge\.pandorabots\.com\/pandora\/talk\?botid=(.+?)&skin=custom_input"/', $html, $match);
 				$botid = $match[1];
@@ -53,7 +53,7 @@ while (true) {
 					WriteLog("[ser][error] setup 1");
 					continue;
 				}
-				$html = cURL_HTTP_Request("http://sheepridge.pandorabots.com/pandora/talk?botid={$botid}&skin=custom_input", null, false, 'cookie/'.$sid.'.cookie')->html;
+				$html = cURL_HTTP_Request("http://sheepridge.pandorabots.com/pandora/talk?botid={$botid}&skin=custom_input", null, false, __DIR__.'/cookie/'.$sid.'.cookie')->html;
 				$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
 				preg_match('/name="botcust2" value="(.+?)"/', $html, $match);
 				$botcust2 = $match[1];
@@ -73,7 +73,7 @@ while (true) {
 				$res = json_decode($res, true);
 				$username = $res["first_name"];
 
-				$res = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input', array('input'=>"My name is ".$username, 'botcust2'=>$botcust2), false, 'cookie/'.$sid.'.cookie');
+				$res = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input', array('input'=>"My name is ".$username, 'botcust2'=>$botcust2), false, __DIR__.'/cookie/'.$sid.'.cookie');
 				if ($res === false) {
 					WriteLog("[ser][error] set name fail sid=".$sid);
 					$username = "Judge";
@@ -115,7 +115,7 @@ while (true) {
 			$transname = array("ALICE" => "Eve", "Alice" => "Eve", "alice" => "Eve",
 				"EVE" => "ALICE", "Eve" => "Alice", "eve" => "alice");
 			$input = strtr($input, $transname);
-			$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input, 'botcust2'=>$botcust2),false,'cookie/'.$sid.'.cookie');
+			$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input, 'botcust2'=>$botcust2),false,__DIR__.'/cookie/'.$sid.'.cookie');
 			if ($html === false) {
 				SendMessage($sid, "[Server Message][Error] AI server is down. Please try again later.");
 				WriteLog("[ser][error] fetch page 1");
