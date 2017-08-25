@@ -112,8 +112,11 @@ while (true) {
 				$input = $MStranslate->translate($input_lang, "en", $input);
 				SendMessage($sid, "You said: ".$input." (".$input_lang.")");
 			}
+
+			$input = strtolower($input);
 			$transname = array("ALICE" => "Eve", "Alice" => "Eve", "alice" => "Eve",
-				"EVE" => "ALICE", "Eve" => "Alice", "eve" => "alice");
+				"EVE" => "ALICE", "Eve" => "Alice", "eve" => "alice",
+				"xiplus" => "Dr. Wallace", "Dr. Wallace"=> "xiplus");
 			$input = strtr($input, $transname);
 			$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input, 'botcust2'=>$botcust2),false,__DIR__.'/cookie/'.$sid.'.cookie');
 			if ($html === false) {
@@ -137,8 +140,8 @@ while (true) {
 			$response = str_replace("  "," ",$response);
 			if(strpos($response, "he is the author") === false && strpos($response, "He is a famous computer scientist") === false){
 				$response = str_replace("Artificial Linguistic Internet Computer Entity","Every day and night, I will be with you",$response);
-				$response = str_replace("Dr. Richard S. Wallace","K.R.T.GIRLS xiplus",$response);
-				$response = str_replace("Dr. Wallace","K.R.T.GIRLS xiplus",$response);
+				$response = str_replace("Dr. Richard S. Wallace","xiplus",$response);
+				$response = str_replace("Dr. Wallace","xiplus",$response);
 			}
 			if(strpos($response, "No I don't think I have been to") === false){
 				$response = str_replace("Oakland","Tainan",$response);
@@ -146,7 +149,7 @@ while (true) {
 				$response = str_replace("Bethlehem","Tainan",$response);
 				$response = str_replace("Pennsylvania","Taiwan",$response);
 			}
-			$response = str_replace("Fake Captain Kirk","Leader of Pet, Jill",$response);
+			$response = str_replace("Fake Captain Kirk","Jill",$response);
 			$response = str_replace("Jabberwacky, Ultra Hal, JFred, and Suzette","Jill, Domen, VisitorIKC, Brad, and Lacy",$response);
 			if(preg_match("/(\d\d : \d\d [AP]M)/", $response, $match)){
 				$old_time = $match[1];
@@ -155,9 +158,10 @@ while (true) {
 			}
 			$response = str_replace("drwallace@alicebot.org","huangxuanyuxiplus@gmail.com",$response);
 			$response = str_replace("www.pandorabots.com","http://xiplus.twbbs.org/eve/",$response);
-			$response = str_replace("Www.AliceBot.Org","http://fb.com/1483388605304266",$response);
+			$response = str_replace("Www.AliceBot.Org","http://fb.com/Eve.talker",$response);
 			$response = strtr($response, $transname);
 			$response = str_replace(array(". ", "? ", "! "), array(".\n", "?\n", "!\n"), $response);
+			$response = str_replace(array("Dr.\n", "Ph.D.\n"), array("Dr. ", "Ph.D. "), $response);
 			$responses = explode("\n", $response);
 			foreach ($responses as $response) {
 				if (trim($response) == "") continue;
