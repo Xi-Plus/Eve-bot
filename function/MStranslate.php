@@ -18,6 +18,9 @@ class MStranslate {
 			'Authorization: Bearer '.$this->access_token
 		);
 		$res = cURL_HTTP_Request("http://api.microsofttranslator.com/v2/Http.svc/Detect?text=".urlencode($text), false, $header)->html;
+		if ($res === false) {
+			return "null";
+		}
 		$xmlObj = simplexml_load_string($res);
 		foreach((array)$xmlObj[0] as $val){
 			$languageCode = $val;
@@ -29,6 +32,9 @@ class MStranslate {
 			'Authorization: Bearer '.$this->access_token
 		);
 		$res = cURL_HTTP_Request('http://api.microsofttranslator.com/v2/Http.svc/Translate?text='.urlencode($text).'&from='.$from.'&to='.$to, false, $header)->html;
+		if ($res === false) {
+			return "null";
+		}
 		$xmlObj = simplexml_load_string($res);
 		foreach((array)$xmlObj[0] as $val){
 			$return = $val;
