@@ -18,7 +18,7 @@ function SendMessage($sid, $message) {
 		"recipient"=>array("id"=>$sid),
 		"message"=>array("text"=>$message)
 	);
-	$res = cURL_HTTP_Request("https://graph.facebook.com/v2.6/me/messages?access_token=".$C['page_token'], $post);
+	$res = cURL_HTTP_Request("https://graph.facebook.com/v2.6/me/messages?access_token=".$C['page_token'], $post)->html;
 	$res = json_decode($res, true);
 	if (isset($res["error"])) {
 		WriteLog("[smsg][error] res=".json_encode($res)." sid=".$sid." msg=".$message);
@@ -39,52 +39,26 @@ while (true) {
 	foreach ($input['entry'] as $entry) {
 		foreach ($entry['messaging'] as $messaging) {
 			$sid = $messaging['sender']['id'];
-			$sth = $G["db"]->prepare("SELECT * FROM `{$C['DBTBprefix']}user` WHERE `sid` = :sid");
-			$sth->bindValue(":sid", $sid);
-			$sth->execute();
-			$row = $sth->fetch(PDO::FETCH_ASSOC);
-			if ($row === false) {
-				$html = cURL_HTTP_Request('http://alice.pandorabots.com/', null, false, __DIR__.'/cookie/'.$sid.'.cookie')->html;
-				$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
-				preg_match('/<iframe src="http:\/\/sheepridge\.pandorabots\.com\/pandora\/talk\?botid=(.+?)&skin=custom_input"/', $html, $match);
-				$botid = $match[1];
-				if ($botid === null) {
-					SendMessage($sid, "[Server Message][Error] There were some errors when setting AI. Please try later.");
-					WriteLog("[ser][error] setup 1");
-					continue;
-				}
-				$html = cURL_HTTP_Request("http://sheepridge.pandorabots.com/pandora/talk?botid={$botid}&skin=custom_input", null, false, __DIR__.'/cookie/'.$sid.'.cookie')->html;
-				$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
-				preg_match('/name="botcust2" value="(.+?)"/', $html, $match);
-				$botcust2 = $match[1];
-				if ($botcust2 === null) {
-					SendMessage($sid, "[Server Message][Error] There were some errors when setting AI. Please try later.");
-					WriteLog("[ser][error] setup 2");
-					continue;
-				}
-				$sth = $G["db"]->prepare("INSERT INTO `{$C['DBTBprefix']}user` (`sid`, `botid`, `botcust2`) VALUES (:sid, :botid, :botcust2)");
-				$sth->bindValue(":sid", $sid);
-				$sth->bindValue(":botid", $botid);
-				$sth->bindValue(":botcust2", $botcust2);
-				$sth->execute();
+			$cookiepath = __DIR__.'/cookie/'.$sid.'.cookie';
 
-				$res = cURL_HTTP_Request("https://graph.facebook.com/v2.6/{$sid}?access_token={$C['page_token']}")->html;
+			if (!file_exists($cookiepath)) {
+				$res = cURL_HTTP_Request("https://graph.facebook.com/v2.8/{$sid}?access_token={$C['page_token']}")->html;
 				WriteLog("[ser][info] newuser sid=".$sid." res=".$res);
 				$res = json_decode($res, true);
 				$username = $res["first_name"];
 
-				$res = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input', array('input'=>"My name is ".$username, 'botcust2'=>$botcust2), false, __DIR__.'/cookie/'.$sid.'.cookie');
+				$message = "My name is ".$username;
+				$res = cURL_HTTP_Request($C['Server_URL'], array('input'=>$message), false, $cookiepath);
+				WriteLog("$sid send $message");
 				if ($res === false) {
-					WriteLog("[ser][error] set name fail sid=".$sid);
-					$username = "Judge";
+					SendMessage($sid, "[Server Message][Error] There were some errors when setting AI. Please try later.");
+					continue;
 				}
 				SendMessage($sid, "Nice to meet you.\n".
 					"I will call you {$username}.\n".
 					"You can type \"My name is ...\" to set your nickname.");
-			} else {
-				$botid = $row["botid"];
-				$botcust2 = $row["botcust2"];
 			}
+
 			if (!isset($messaging['message']['text'])) {
 				SendMessage($sid, "[Server Message][Error] Only supports text.");
 				continue;
@@ -118,7 +92,7 @@ while (true) {
 				"EVE" => "ALICE", "Eve" => "Alice", "eve" => "alice",
 				"xiplus" => "Dr. Wallace", "Dr. Wallace"=> "xiplus");
 			$input = strtr($input, $transname);
-			$html = cURL_HTTP_Request('http://sheepridge.pandorabots.com/pandora/talk?botid='.$botid.'&skin=custom_input',array('input'=>$input, 'botcust2'=>$botcust2),false,__DIR__.'/cookie/'.$sid.'.cookie');
+			$html = cURL_HTTP_Request($C['Server_URL'],array('input'=>$input), false, $cookiepath);
 			if ($html === false) {
 				SendMessage($sid, "[Server Message][Error] AI server is down. Please try again later.");
 				WriteLog("[ser][error] fetch page 1");
@@ -131,7 +105,7 @@ while (true) {
 			}
 			$html = $html->html;
 			$html = str_replace(array("\t","\r\n","\r","\n"), "", $html);
-			preg_match('/<b>You said:<\/b>.+?<br\/><b>A.L.I.C.E.:<\/b> (.+?)<br\/>/', $html, $match);
+			preg_match('/<font size="2" face="Verdana" color=darkred>(.+?)<\/font>/', $html, $match);
 			$response = $match[1];
 			$response = str_replace("<br> ","\n",$response);
 			$response = str_replace("<p></p> ","\n\n",$response);

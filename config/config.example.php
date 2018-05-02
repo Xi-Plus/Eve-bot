@@ -3,6 +3,8 @@ $C['page_id'] = '1483388605304266';
 
 $C['verify_token'] = 'verify_token';
 
+$C['Server_URL'] = "";
+
 $C['MStranslate']['on'] = false;
 $C['MStranslate']['client_id'] = 'client_id';
 $C['MStranslate']['client_secret'] = 'client_secret';
