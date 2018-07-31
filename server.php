@@ -65,14 +65,6 @@ while (true) {
 			}
 			$input = $messaging['message']['text'];
 			$input = str_replace("\n", "", $input);
-			if (!$C['MStranslate']['on'] && !preg_match("/[A-Za-z0-9]/", $input)) {
-				SendMessage($sid, "[Server Message][Error] Your message must include any alphanumeric character.");
-				continue;
-			}
-			if (!$C['MStranslate']['on'] && !preg_match("/^[\x20-\x7E]*$/", $input)) {
-				SendMessage($sid, "[Server Message][Error] Only supports ASCII printable code (alphanumeric characters and some English punctuations).");
-				continue;
-			}
 			if ($C['MStranslate']['on']) {
 				$input_lang = $MStranslate->getlangcode($input);
 			}
