@@ -60,7 +60,7 @@ while (true) {
 			}
 
 			if (!isset($messaging['message']['text'])) {
-				SendMessage($sid, "[Server Message][Error] Only supports text.");
+				SendMessage($sid, "Please send me plain text message.");
 				continue;
 			}
 			$input = $messaging['message']['text'];
